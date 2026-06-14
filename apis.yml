@@ -1,0 +1,63 @@
+aid: wundergraph-cloud
+name: WunderGraph Cloud
+description: |
+  WunderGraph Cloud is the managed cloud platform for WunderGraph Cosmo, the complete
+  GraphQL Federation Stack that enables teams to build, manage, and scale supergraphs
+  from any API across teams. It provides full lifecycle GraphQL API management including
+  schema registry, composition checks, analytics, distributed tracing, and routing
+  through a high-performance open-source federation runtime.
+type: Index
+image: https://kinlane-productions2.s3.amazonaws.com/apis-json/apis-json-logo.jpg
+url: https://wundergraph.com/
+baseURL: https://cosmo-cp.wundergraph.com
+created: 2026-06-14
+modified: 2026-06-14
+specificationVersion: '0.19'
+tags:
+  - GraphQL
+  - Federation
+  - API Gateway
+  - Supergraph
+  - API Management
+  - GraphQL Federation
+  - Developer Platform
+apis:
+  - aid: wundergraph-cloud:graphql-api
+    name: WunderGraph Cloud GraphQL API
+    description: |
+      The WunderGraph Cosmo GraphQL API provides full lifecycle management of federated
+      GraphQL APIs, including schema registry operations, composition checks, analytics
+      queries, subgraph management, and routing configuration through a unified
+      GraphQL interface backed by the Cosmo Control Plane.
+    tags:
+      - GraphQL
+      - Federation
+      - API Management
+    image: https://kinlane-productions2.s3.amazonaws.com/apis-json/apis-json-logo.jpg
+    humanURL: https://cosmo-docs.wundergraph.com/
+    baseURL: https://cosmo-cp.wundergraph.com
+    properties:
+      - url: https://cosmo-docs.wundergraph.com/
+        type: Documentation
+      - url: graphql/wundergraph-cloud-graphql.md
+        type: GraphQL
+common:
+  - url: https://wundergraph.com/
+    type: Website
+  - url: https://cosmo-docs.wundergraph.com/
+    type: Documentation
+  - url: https://www.linkedin.com/company/wundergraph
+    type: LinkedIn
+  - url: https://github.com/wundergraph
+    type: GitHubOrganization
+  - url: https://wundergraph.com/pricing
+    type: Pricing
+  - url: plans/wundergraph-cloud-plans.md
+    type: Plans
+  - url: rate-limits/wundergraph-cloud-rate-limits.md
+    type: RateLimits
+  - url: finops/wundergraph-cloud-finops.md
+    type: FinOps
+maintainers:
+  - FN: Kin Lane
+    email: kin@apievangelist.com
