@@ -1,0 +1,1872 @@
+"""
+WunderGraph Cosmo Platform API — GraphQL SDL
+Derived from proto/wg/cosmo/platform/v1/platform.proto
+Source: https://github.com/wundergraph/cosmo/blob/main/proto/wg/cosmo/platform/v1/platform.proto
+Endpoint: https://cosmo-cp.wundergraph.com
+Authentication: Bearer API key via Authorization header
+"""
+
+# ---------------------------------------------------------------------------
+# Scalars
+# ---------------------------------------------------------------------------
+
+scalar DateTime
+
+# ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
+
+enum SubgraphType {
+  STANDARD
+  GRPC_PLUGIN
+  GRPC_SERVICE
+}
+
+enum ExpiresAt {
+  NEVER
+  THIRTY_DAYS
+  SIX_MONTHS
+  ONE_YEAR
+}
+
+enum LintSeverity {
+  warn
+  error
+}
+
+enum Feature {
+  rbac
+  ai
+  scim
+}
+
+enum IntegrationType {
+  slack
+}
+
+enum PublishedOperationStatus {
+  CREATED
+  UPDATED
+  CONFLICT
+}
+
+enum OperationsFetchBasedOn {
+  CLIENTS
+  OPERATIONS
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+enum ProposalOrigin {
+  MANUAL
+  SCHEMA_CHECK
+}
+
+enum ProposalNamingConvention {
+  BRANCH_NAME
+  CUSTOM
+}
+
+# ---------------------------------------------------------------------------
+# Common types
+# ---------------------------------------------------------------------------
+
+type Response {
+  code: Int!
+  details: String
+}
+
+type Label {
+  key: String!
+  value: String!
+}
+
+type CompositionError {
+  message: String!
+  federatedGraphName: String!
+  namespace: String!
+  subgraphName: String!
+}
+
+type CompositionWarning {
+  message: String!
+  federatedGraphName: String!
+  namespace: String!
+  subgraphName: String!
+}
+
+type DeploymentError {
+  message: String!
+  federatedGraphName: String!
+  namespace: String!
+  subgraphName: String!
+}
+
+type RequestSeriesItem {
+  timestamp: String!
+  totalRequests: Int!
+  erroredRequests: Int!
+}
+
+type SubgraphPublishStats {
+  compositionErrors: Int!
+  compositionWarnings: Int!
+  deploymentErrors: Int!
+}
+
+type Contract {
+  id: String!
+  name: String!
+  sourceFederatedGraphId: String!
+  excludeTags: [String!]!
+  includeTags: [String!]!
+  namespace: String!
+}
+
+# ---------------------------------------------------------------------------
+# Federated Graphs & Subgraphs
+# ---------------------------------------------------------------------------
+
+type FederatedGraph {
+  id: String!
+  name: String!
+  routingURL: String!
+  labelMatchers: [String!]!
+  lastUpdatedAt: String!
+  isComposable: Boolean!
+  compositionErrors: String!
+  connectedSubgraphs: Int!
+  requestSeries: [RequestSeriesItem!]!
+  readme: String
+  targetId: String!
+  namespace: String!
+  compositionId: String
+  supportsFederation: Boolean!
+  contract: Contract
+  admissionWebhookUrl: String
+  routerCompatibilityVersion: String!
+}
+
+type SubgraphPluginData {
+  version: String!
+  platforms: [String!]!
+}
+
+type Subgraph {
+  id: String!
+  name: String!
+  routingURL: String!
+  lastUpdatedAt: String!
+  labels: [Label!]!
+  creatorUserId: String
+  readme: String
+  subscriptionUrl: String!
+  targetId: String!
+  namespace: String!
+  subscriptionProtocol: String!
+  isV2Graph: Boolean
+  isEventDrivenGraph: Boolean!
+  websocketSubprotocol: String!
+  isFeatureSubgraph: Boolean!
+  baseSubgraphName: String
+  baseSubgraphId: String
+  type: SubgraphType!
+  pluginData: SubgraphPluginData
+}
+
+# ---------------------------------------------------------------------------
+# Schema checks
+# ---------------------------------------------------------------------------
+
+type SchemaChange {
+  changeType: String!
+  path: String
+  description: String!
+  isBreaking: Boolean!
+}
+
+type FederatedGraphSchemaChange {
+  changes: [SchemaChange!]!
+  compositionErrors: [CompositionError!]!
+  federatedGraphName: String!
+  namespace: String!
+}
+
+type LintLocation {
+  line: Int!
+  column: Int!
+  endLine: Int!
+  endColumn: Int!
+}
+
+type LintIssue {
+  lintRuleType: String!
+  message: String!
+  severity: LintSeverity!
+  location: LintLocation
+}
+
+type GraphPruningIssue {
+  graphPruningRuleType: String!
+  message: String!
+  severity: LintSeverity!
+  location: LintLocation
+  federatedGraphName: String!
+  namespace: String!
+  fieldPath: String!
+}
+
+type CheckOperationUsageStats {
+  totalOperations: Int!
+  totalClients: Int!
+  firstSeenAt: String!
+  lastSeenAt: String!
+}
+
+type CheckedFederatedGraphs {
+  id: String!
+  name: String!
+  namespace: String!
+  isComposable: Boolean!
+  compositionErrors: [CompositionError!]!
+  compositionWarnings: [CompositionWarning!]!
+  deploymentErrors: [DeploymentError!]!
+}
+
+type SchemaCheckCounts {
+  changes: Int!
+  errors: Int!
+}
+
+type VCSContext {
+  author: String!
+  commitSha: String!
+  branch: String!
+}
+
+type GhDetails {
+  commitSha: String!
+  ownerSlug: String!
+  repositorySlug: String!
+}
+
+type CheckedSubgraph {
+  id: String!
+  subgraphName: String!
+  subgraphId: String
+  isDeleted: Boolean!
+  isNew: Boolean!
+  labels: [Label!]!
+}
+
+type LinkedCheck {
+  id: String!
+  affectedGraphNames: [String!]!
+  isCheckSuccessful: Boolean!
+  hasClientTraffic: Boolean!
+  hasGraphPruningErrors: Boolean!
+  clientTrafficCheckSkipped: Boolean!
+  graphPruningCheckSkipped: Boolean!
+  subgraphNames: [String!]!
+  namespace: String!
+  isForcedSuccess: Boolean!
+}
+
+type SchemaCheck {
+  id: String!
+  targetID: String
+  subgraphName: String
+  timestamp: String!
+  isComposable: Boolean!
+  isBreaking: Boolean!
+  hasClientTraffic: Boolean!
+  isForcedSuccess: Boolean!
+  isDeleted: Boolean!
+  ghDetails: GhDetails
+  hasLintErrors: Boolean!
+  hasGraphPruningErrors: Boolean!
+  clientTrafficCheckSkipped: Boolean!
+  lintSkipped: Boolean!
+  graphPruningSkipped: Boolean!
+  vcsContext: VCSContext
+  checkedSubgraphs: [CheckedSubgraph!]!
+  proposalMatch: String
+  compositionSkipped: Boolean!
+  breakingChangesSkipped: Boolean!
+  errorMessage: String
+  linkedChecks: [LinkedCheck!]!
+  checkExtensionDeliveryId: String
+  checkExtensionErrorMessage: String
+}
+
+type ChangeCounts {
+  additions: Int!
+  deletions: Int!
+}
+
+# ---------------------------------------------------------------------------
+# Changelogs & Compositions
+# ---------------------------------------------------------------------------
+
+type FederatedGraphChangelog {
+  schemaVersionId: String!
+  createdAt: String!
+  changedSubgraphName: String!
+  addedSubgraphName: String!
+  removedSubgraphName: String!
+  compositionId: String!
+}
+
+type FederatedGraphChangelogOutput {
+  schemaVersionId: String!
+  createdAt: String!
+  changes: [FederatedGraphChangelog!]!
+}
+
+# ---------------------------------------------------------------------------
+# Analytics & Metrics
+# ---------------------------------------------------------------------------
+
+type Pagination {
+  limit: Int!
+  offset: Int!
+}
+
+type AnalyticsFilter {
+  field: String!
+  value: String
+  operator: String!
+}
+
+type DateRange {
+  start: String!
+  end: String!
+}
+
+type AnalyticsViewColumn {
+  name: String!
+  title: String!
+  isCellClickable: Boolean!
+  isHidden: Boolean!
+  type: String!
+}
+
+type AnalyticsViewResultFilterOption {
+  label: String!
+  operator: String
+  value: String
+}
+
+type AnalyticsViewResultFilter {
+  columnName: String!
+  title: String!
+  options: [AnalyticsViewResultFilterOption!]!
+}
+
+type AnalyticsViewRowValue {
+  kind: String
+}
+
+type AnalyticsViewRow {
+  value: [AnalyticsViewRowValue!]!
+}
+
+type AnalyticsViewResult {
+  columns: [AnalyticsViewColumn!]!
+  rows: [AnalyticsViewRow!]!
+  filters: [AnalyticsViewResultFilter!]!
+}
+
+type RequestSeriesDataPoint {
+  timestamp: String!
+  totalRequests: Int!
+  erroredRequests: Int!
+}
+
+type OperationRequestCount {
+  operationHash: String!
+  operationName: String!
+  count: Int!
+}
+
+type FederatedGraphMetrics {
+  requestSeries: [RequestSeriesDataPoint!]!
+}
+
+type SubgraphMetrics {
+  requestSeries: [RequestSeriesDataPoint!]!
+}
+
+type Span {
+  spanId: String!
+  traceId: String!
+  parentSpanId: String!
+  name: String!
+  startTime: String!
+  endTime: String!
+  duration: Int!
+  statusCode: String!
+  statusMessage: String!
+  attributes: String!
+}
+
+# ---------------------------------------------------------------------------
+# Organization & Members
+# ---------------------------------------------------------------------------
+
+type OrgMemberGroup {
+  groupId: String!
+  name: String!
+}
+
+type OrgMember {
+  userID: String!
+  email: String!
+  orgMemberID: String!
+  active: Boolean!
+  joinedAt: String!
+  groups: [OrgMemberGroup!]!
+}
+
+type PendingOrgInvitation {
+  email: String!
+  invitedBy: String
+}
+
+type OrganizationGroupRule {
+  resource: String!
+  action: String!
+  resourceType: String!
+}
+
+type OrganizationGroup {
+  groupId: String!
+  name: String!
+  description: String!
+  builtin: Boolean!
+  membersCount: Int!
+  rules: [OrganizationGroupRule!]!
+}
+
+type LoginMethod {
+  type: String!
+  provider: String
+}
+
+type WhoAmIUser {
+  id: String!
+  email: String!
+  username: String!
+  organizations: [UserOrganization!]!
+}
+
+type UserOrganization {
+  id: String!
+  name: String!
+  slug: String!
+  plan: String!
+  roles: [String!]!
+}
+
+# ---------------------------------------------------------------------------
+# API Keys
+# ---------------------------------------------------------------------------
+
+type APIKeyGroup {
+  id: String!
+  name: String!
+}
+
+type APIKey {
+  id: String!
+  name: String!
+  createdBy: String!
+  createdAt: String!
+  lastUsedAt: String!
+  expiresAt: String!
+  group: APIKeyGroup
+  external: Boolean!
+}
+
+# ---------------------------------------------------------------------------
+# Router Tokens
+# ---------------------------------------------------------------------------
+
+type RouterToken {
+  id: String!
+  name: String!
+  token: String!
+  createdAt: String!
+}
+
+# ---------------------------------------------------------------------------
+# Persisted Operations
+# ---------------------------------------------------------------------------
+
+type PersistedOperation {
+  id: String!
+  operationId: String!
+  hash: String!
+  filePath: String!
+  contents: String!
+  operationNames: [String!]!
+}
+
+type PublishedOperation {
+  id: String!
+  hash: String!
+  status: PublishedOperationStatus!
+}
+
+# ---------------------------------------------------------------------------
+# Webhooks & Integrations
+# ---------------------------------------------------------------------------
+
+type OrganizationWebhookConfig {
+  id: String!
+  endpoint: String!
+  events: [String!]!
+}
+
+type SlackIntegrationConfig {
+  webhookURL: String!
+}
+
+type IntegrationConfig {
+  slack: SlackIntegrationConfig
+}
+
+type Integration {
+  id: String!
+  name: String!
+  type: IntegrationType!
+  config: IntegrationConfig
+  createdAt: String!
+}
+
+# ---------------------------------------------------------------------------
+# Feature Flags
+# ---------------------------------------------------------------------------
+
+type FeatureFlag {
+  id: String!
+  name: String!
+  namespace: String!
+  labels: [Label!]!
+  isEnabled: Boolean!
+  createdAt: String!
+  updatedAt: String!
+  createdBy: String!
+}
+
+# ---------------------------------------------------------------------------
+# Namespaces
+# ---------------------------------------------------------------------------
+
+type Namespace {
+  id: String!
+  name: String!
+  organizationId: String!
+}
+
+# ---------------------------------------------------------------------------
+# Proposals
+# ---------------------------------------------------------------------------
+
+type Proposal {
+  id: String!
+  name: String!
+  federatedGraphId: String!
+  createdBy: String!
+  createdAt: String!
+  updatedAt: String!
+  state: String!
+  origin: ProposalOrigin!
+}
+
+# ---------------------------------------------------------------------------
+# Billing
+# ---------------------------------------------------------------------------
+
+type BillingPlan {
+  id: String!
+  name: String!
+  price: Float!
+  features: [String!]!
+  stripePriceId: String!
+}
+
+# ---------------------------------------------------------------------------
+# Cache Warmer
+# ---------------------------------------------------------------------------
+
+type CacheWarmerOperation {
+  id: String!
+  operationName: String!
+  operationContent: String!
+  createdAt: String!
+}
+
+# ---------------------------------------------------------------------------
+# Audit Logs
+# ---------------------------------------------------------------------------
+
+type AuditLog {
+  id: String!
+  action: String!
+  actorId: String!
+  actorDisplayName: String!
+  targetId: String!
+  targetDisplayName: String!
+  createdAt: String!
+  meta: String!
+}
+
+# ---------------------------------------------------------------------------
+# Onboarding
+# ---------------------------------------------------------------------------
+
+type OnboardingStep {
+  id: String!
+  completed: Boolean!
+}
+
+type Onboarding {
+  steps: [OnboardingStep!]!
+  completed: Boolean!
+}
+
+# ---------------------------------------------------------------------------
+# Query
+# ---------------------------------------------------------------------------
+
+type Query {
+  """Returns the identity of the currently authenticated user."""
+  whoAmI: WhoAmIUser!
+
+  """Lists all organizations the authenticated user is a member of."""
+  listOrganizations: [UserOrganization!]!
+
+  """Returns a specific organization by its slug."""
+  getOrganizationBySlug(slug: String!): UserOrganization
+
+  """Returns the list of federated graphs in the organization."""
+  getFederatedGraphs(
+    namespace: String
+    namespaceId: String
+    limit: Int
+    offset: Int
+    includeMetrics: Boolean
+    supportsFederation: Boolean
+    query: String
+    excludeContracts: Boolean
+  ): [FederatedGraph!]!
+
+  """Returns a federated graph by name and namespace."""
+  getFederatedGraphByName(name: String!, namespace: String!): FederatedGraph
+
+  """Returns a federated graph by its internal ID."""
+  getFederatedGraphById(id: String!): FederatedGraph
+
+  """Returns federated graphs that match specific subgraph labels."""
+  getFederatedGraphsBySubgraphLabels(labels: [LabelInput!]!, namespace: String!): [FederatedGraph!]!
+
+  """Returns the latest valid SDL of a federated graph by name."""
+  getFederatedGraphSDLByName(name: String!, namespace: String!): String
+
+  """Returns the SDL for a specific schema version of a federated graph."""
+  getSdlBySchemaVersion(schemaVersionId: String!): String
+
+  """Returns the changelog for a specific schema version."""
+  getChangelogBySchemaVersion(schemaVersionId: String!): [FederatedGraphChangelog!]!
+
+  """Returns the list of subgraphs in the organization."""
+  getSubgraphs(
+    namespace: String
+    namespaceId: String
+    limit: Int
+    offset: Int
+    labels: [LabelInput!]
+    query: String
+    excludeFeatureSubgraphs: Boolean
+  ): [Subgraph!]!
+
+  """Returns a subgraph by name and namespace."""
+  getSubgraphByName(name: String!, namespace: String!): Subgraph
+
+  """Returns a subgraph by its internal ID."""
+  getSubgraphById(id: String!): Subgraph
+
+  """Returns the SDL of a subgraph from the latest valid composition."""
+  getSubgraphSDLFromLatestComposition(name: String!, namespace: String!, federatedGraphName: String!): String
+
+  """Returns the latest published SDL of a subgraph."""
+  getLatestSubgraphSDL(name: String!, namespace: String!): String
+
+  """Returns schema checks for a federated graph."""
+  getChecksByFederatedGraphName(
+    graphName: String!
+    namespace: String!
+    limit: Int
+    offset: Int
+    startDate: String
+    endDate: String
+  ): [SchemaCheck!]!
+
+  """Returns a summary of a specific schema check."""
+  getCheckSummary(checkId: String!, graphName: String!, namespace: String!): GetCheckSummaryResult
+
+  """Returns affected operations for a schema check."""
+  getCheckOperations(checkId: String!, graphName: String!, namespace: String!): [CheckOperation!]!
+
+  """Returns the body of a stored operation by its hash."""
+  getOperationContent(hash: String!): String
+
+  """Returns the changelog of a federated graph."""
+  getFederatedGraphChangelog(
+    graphName: String!
+    namespace: String!
+    pagination: PaginationInput
+    dateRange: DateRangeInput
+    schemaVersionId: String
+  ): GetFederatedGraphChangelogResult!
+
+  """Returns analytics view data for a federated graph."""
+  getAnalyticsView(
+    graphName: String!
+    namespace: String!
+    name: String!
+    config: AnalyticsConfigInput
+    dateRange: DateRangeInput
+    pagination: PaginationInput
+    filters: [AnalyticsFilterInput!]
+    groupBy: String
+  ): AnalyticsViewResult!
+
+  """Returns dashboard analytics overview for a federated graph."""
+  getDashboardAnalyticsView(
+    graphName: String!
+    namespace: String!
+    dateRange: DateRangeInput
+    filters: [AnalyticsFilterInput!]
+  ): DashboardAnalyticsResult!
+
+  """Returns a distributed trace by trace ID."""
+  getTrace(traceId: String!, graphName: String!, namespace: String!): [Span!]!
+
+  """Returns graph-level metrics for a federated graph."""
+  getGraphMetrics(
+    graphName: String!
+    namespace: String!
+    dateRange: DateRangeInput
+    filters: [AnalyticsFilterInput!]
+  ): GraphMetricsResult!
+
+  """Returns error rate metrics for a federated graph."""
+  getMetricsErrorRate(
+    graphName: String!
+    namespace: String!
+    dateRange: DateRangeInput
+    filters: [AnalyticsFilterInput!]
+  ): MetricsErrorRateResult!
+
+  """Returns subgraph-level metrics."""
+  getSubgraphMetrics(
+    subgraphName: String!
+    namespace: String!
+    dateRange: DateRangeInput
+    filters: [AnalyticsFilterInput!]
+  ): SubgraphMetrics!
+
+  """Returns error rate metrics for a subgraph."""
+  getSubgraphMetricsErrorRate(
+    subgraphName: String!
+    namespace: String!
+    dateRange: DateRangeInput
+    filters: [AnalyticsFilterInput!]
+  ): MetricsErrorRateResult!
+
+  """Returns field usage statistics for a federated graph."""
+  getFieldUsage(
+    graphName: String!
+    namespace: String!
+    namedType: String!
+    fieldName: String!
+    dateRange: DateRangeInput
+    filters: [AnalyticsFilterInput!]
+  ): FieldUsageResult!
+
+  """Returns total request count for the organization."""
+  getOrganizationRequestsCount(dateRange: DateRangeInput!): Int!
+
+  """Returns operations for a graph namespace."""
+  getOperations(
+    graphName: String!
+    namespace: String!
+    dateRange: DateRangeInput
+    filters: [AnalyticsFilterInput!]
+    pagination: PaginationInput
+    fetchBasedOn: OperationsFetchBasedOn
+    clientName: String
+    clientVersion: String
+  ): [OperationEntry!]!
+
+  """Returns client analytics for a graph."""
+  getClientsFromAnalytics(
+    graphName: String!
+    namespace: String!
+    dateRange: DateRangeInput
+  ): [AnalyticsClient!]!
+
+  """Returns clients that executed a specific operation."""
+  getOperationClients(
+    graphName: String!
+    namespace: String!
+    operationHash: String!
+    dateRange: DateRangeInput
+  ): [AnalyticsClient!]!
+
+  """Returns deprecated fields used by a specific operation."""
+  getOperationDeprecatedFields(
+    graphName: String!
+    namespace: String!
+    operationHash: String!
+  ): [DeprecatedField!]!
+
+  """Returns organization members."""
+  getOrganizationMembers(organizationSlug: String!): [OrgMember!]!
+
+  """Returns pending organization invitations."""
+  getPendingOrganizationMembers(organizationSlug: String!): [PendingOrgInvitation!]!
+
+  """Returns whether the organization member limit has been reached."""
+  isMemberLimitReached: Boolean!
+
+  """Returns organization API keys."""
+  getAPIKeys: [APIKey!]!
+
+  """Returns router tokens for a federated graph."""
+  getRouterTokens(graphName: String!, namespace: String!): [RouterToken!]!
+
+  """Returns persisted operations for a client."""
+  getPersistedOperations(federatedGraphId: String!, clientId: String!): [PersistedOperation!]!
+
+  """Returns audit logs for the organization."""
+  getAuditLogs(limit: Int, offset: Int, startDate: String, endDate: String): [AuditLog!]!
+
+  """Returns organization webhook configurations."""
+  getOrganizationWebhookConfigs: [OrganizationWebhookConfig!]!
+
+  """Returns metadata about available webhook events."""
+  getOrganizationWebhookMeta: WebhookMeta!
+
+  """Returns webhook delivery history."""
+  getOrganizationWebhookHistory(webhookId: String!, limit: Int, offset: Int): [WebhookDelivery!]!
+
+  """Returns details of a specific webhook delivery."""
+  getWebhookDeliveryDetails(deliveryId: String!): WebhookDelivery
+
+  """Returns organization integrations (e.g. Slack)."""
+  getOrganizationIntegrations: [Integration!]!
+
+  """Returns organization groups (RBAC)."""
+  getOrganizationGroups: [OrganizationGroup!]!
+
+  """Returns members of an organization group."""
+  getOrganizationGroupMembers(groupId: String!): [OrgMember!]!
+
+  """Returns namespaces in the organization."""
+  getNamespaces: [Namespace!]!
+
+  """Returns a specific namespace."""
+  getNamespace(name: String!): Namespace
+
+  """Returns billing plans available."""
+  getBillingPlans: [BillingPlan!]!
+
+  """Returns compositions for a federated graph."""
+  getCompositions(graphName: String!, namespace: String!, limit: Int, offset: Int): [Composition!]!
+
+  """Returns details of a specific composition."""
+  getCompositionDetails(compositionId: String!): CompositionDetails
+
+  """Returns feature flags in a namespace."""
+  getFeatureFlags(namespace: String!, limit: Int, offset: Int, query: String): [FeatureFlag!]!
+
+  """Returns a feature flag by name."""
+  getFeatureFlagByName(name: String!, namespace: String!): FeatureFlag
+
+  """Returns feature subgraphs associated with a feature flag."""
+  getFeatureSubgraphsByFeatureFlag(featureFlagName: String!, namespace: String!): [Subgraph!]!
+
+  """Returns feature subgraphs in a namespace."""
+  getFeatureSubgraphs(namespace: String!, limit: Int, offset: Int): [Subgraph!]!
+
+  """Returns feature flags applicable to a federated graph."""
+  getFeatureFlagsByFederatedGraph(graphName: String!, namespace: String!): [FeatureFlag!]!
+
+  """Returns feature flags in the latest composition of a federated graph."""
+  getFeatureFlagsInLatestCompositionByFederatedGraph(graphName: String!, namespace: String!): [FeatureFlag!]!
+
+  """Returns feature subgraphs for a federated graph."""
+  getFeatureSubgraphsByFederatedGraph(graphName: String!, namespace: String!): [Subgraph!]!
+
+  """Returns subgraph members (admins)."""
+  getSubgraphMembers(subgraphName: String!, namespace: String!): [OrgMember!]!
+
+  """Returns operation override settings for a check."""
+  getOperationOverrides(checkId: String!, operationHash: String!): [OperationOverride!]!
+
+  """Returns all overrides for operations in a namespace."""
+  getAllOverrides(namespace: String!, graphName: String!): [OperationOverride!]!
+
+  """Returns cache warmer operations for a federated graph."""
+  getCacheWarmerOperations(graphName: String!, namespace: String!): [CacheWarmerOperation!]!
+
+  """Returns cache warmer configuration for a federated graph."""
+  getCacheWarmerConfig(graphName: String!, namespace: String!): CacheWarmerConfig
+
+  """Returns users accessible resources."""
+  getUserAccessibleResources: UserAccessibleResources!
+
+  """Returns routers registered for the organization."""
+  getRouters: [Router!]!
+
+  """Returns pending invitations for the authenticated user."""
+  getInvitations: [OrgInvitation!]!
+
+  """Returns namespace lint configuration."""
+  getNamespaceLintConfig(namespace: String!): [LintRule!]!
+
+  """Returns namespace schema checks configuration."""
+  getNamespaceChecksConfig(namespace: String!): NamespaceChecksConfig
+
+  """Returns namespace graph pruning configuration."""
+  getNamespaceGraphPruningConfig(namespace: String!): NamespaceGraphPruningConfig
+
+  """Returns namespace proposal configuration."""
+  getNamespaceProposalConfig(namespace: String!): NamespaceProposalConfig
+
+  """Returns proposals for a federated graph."""
+  getProposalsByFederatedGraph(graphName: String!, namespace: String!): [Proposal!]!
+
+  """Returns a specific proposal."""
+  getProposal(proposalId: String!): Proposal
+
+  """Returns checks associated with a proposal."""
+  getProposalChecks(proposalId: String!): [SchemaCheck!]!
+
+  """Returns OIDC providers configured for the organization."""
+  listOIDCProviders: [OIDCProvider!]!
+
+  """Returns login methods for a namespace."""
+  listNamespaceLoginMethods(namespace: String!): [LoginMethod!]!
+
+  """Returns login methods for the organization."""
+  getOrganizationLoginMethods: [LoginMethod!]!
+
+  """Returns whether the GitHub App is installed."""
+  isGitHubAppInstalled: Boolean!
+
+  """Returns clients (registered clients for persisted operations)."""
+  getClients(graphName: String!, namespace: String!): [Client!]!
+
+  """Previews the impact of deleting a client."""
+  previewDeleteClient(clientId: String!, graphName: String!, namespace: String!): PreviewDeleteClientResult!
+
+  """Returns the router compatibility versions available."""
+  listRouterCompatibilityVersions: [RouterCompatibilityVersion!]!
+
+  """Returns the subgraph check extensions configuration."""
+  getSubgraphCheckExtensionsConfig(namespace: String!): SubgraphCheckExtensionsConfig
+
+  """Returns onboarding state for the organization."""
+  getOnboarding: Onboarding
+
+  """Returns accessible permissions for the current user."""
+  getUserAccessiblePermissions: [String!]!
+
+  """Returns workspace details."""
+  getWorkspace: Workspace!
+}
+
+# ---------------------------------------------------------------------------
+# Mutation
+# ---------------------------------------------------------------------------
+
+type Mutation {
+  """Creates a namespace in the organization."""
+  createNamespace(name: String!): MutationResult!
+
+  """Deletes a namespace."""
+  deleteNamespace(name: String!): MutationResult!
+
+  """Renames a namespace."""
+  renameNamespace(name: String!, newName: String!): MutationResult!
+
+  """Creates a federated graph."""
+  createFederatedGraph(
+    name: String!
+    namespace: String!
+    routingUrl: String!
+    labelMatchers: [String!]
+    readme: String
+    admissionWebhookURL: String
+    admissionWebhookSecret: String
+    disableResolvabilityValidation: Boolean
+  ): CreateFederatedGraphResult!
+
+  """Deletes a federated graph."""
+  deleteFederatedGraph(name: String!, namespace: String!): MutationResult!
+
+  """Updates a federated graph."""
+  updateFederatedGraph(
+    name: String!
+    namespace: String!
+    routingUrl: String
+    labelMatchers: [String!]
+    readme: String
+    admissionWebhookURL: String
+    admissionWebhookSecret: String
+    disableResolvabilityValidation: Boolean
+  ): MutationResult!
+
+  """Creates a federated subgraph."""
+  createFederatedSubgraph(
+    name: String!
+    namespace: String!
+    routingUrl: String
+    labels: [LabelInput!]
+    subscriptionUrl: String
+    subscriptionProtocol: String
+    websocketSubprotocol: String
+    readme: String
+    type: SubgraphType
+  ): MutationResult!
+
+  """Publishes (pushes) the schema of a subgraph to the control plane."""
+  publishFederatedSubgraph(
+    name: String!
+    namespace: String!
+    schema: String!
+    routingUrl: String
+    labels: [LabelInput!]
+    subscriptionUrl: String
+    subscriptionProtocol: String
+    websocketSubprotocol: String
+    isFeatureSubgraph: Boolean
+    baseSubgraphName: String
+    disableResolvabilityValidation: Boolean
+    type: SubgraphType
+  ): PublishSubgraphResult!
+
+  """Publishes schemas for multiple existing subgraphs in one request."""
+  publishFederatedSubgraphs(
+    namespace: String!
+    subgraphs: [PublishSubgraphInput!]!
+    disableResolvabilityValidation: Boolean
+  ): PublishSubgraphResult!
+
+  """Deletes a federated subgraph."""
+  deleteFederatedSubgraph(name: String!, namespace: String!): MutationResult!
+
+  """Updates a subgraph's routing URL, labels, subscription config, or readme."""
+  updateSubgraph(
+    name: String!
+    namespace: String!
+    routingUrl: String
+    labels: [LabelInput!]
+    subscriptionUrl: String
+    subscriptionProtocol: String
+    websocketSubprotocol: String
+    readme: String
+    disableResolvabilityValidation: Boolean
+    unsetLabels: Boolean
+  ): MutationResult!
+
+  """Checks a subgraph schema for composition issues and breaking changes."""
+  checkSubgraphSchema(
+    subgraphName: String!
+    namespace: String!
+    schema: String!
+    delete: Boolean
+    skipTrafficCheck: Boolean
+    disableResolvabilityValidation: Boolean
+  ): CheckSubgraphSchemaResult!
+
+  """Checks a federated graph with new label configuration."""
+  checkFederatedGraph(name: String!, namespace: String!, labelMatchers: [String!]!): CheckFederatedGraphResult!
+
+  """AI-assisted fix for a subgraph schema."""
+  fixSubgraphSchema(subgraphName: String!, namespace: String!, schema: String!): FixSubgraphSchemaResult!
+
+  """Forces a failed schema check to be marked as successful."""
+  forceCheckSuccess(checkId: String!, graphName: String!, namespace: String!): MutationResult!
+
+  """Creates a monograph (single unified GraphQL API)."""
+  createMonograph(
+    name: String!
+    namespace: String!
+    routingUrl: String!
+    graphUrl: String!
+    subscriptionUrl: String
+    subscriptionProtocol: String
+    readme: String
+    admissionWebhookURL: String
+    admissionWebhookSecret: String
+    websocketSubprotocol: String
+  ): MutationResult!
+
+  """Publishes the schema of a monograph."""
+  publishMonograph(name: String!, namespace: String!, schema: String!): PublishSubgraphResult!
+
+  """Deletes a monograph."""
+  deleteMonograph(name: String!, namespace: String!): MutationResult!
+
+  """Updates a monograph."""
+  updateMonograph(
+    name: String!
+    namespace: String!
+    routingUrl: String
+    graphUrl: String
+    subscriptionUrl: String
+    subscriptionProtocol: String
+    readme: String
+    admissionWebhookURL: String
+    admissionWebhookSecret: String
+    websocketSubprotocol: String
+  ): MutationResult!
+
+  """Converts a monograph into a federated graph."""
+  migrateMonograph(name: String!, namespace: String!): MutationResult!
+
+  """Moves a federated graph to a different namespace."""
+  moveFederatedGraph(name: String!, sourceNamespace: String!, targetNamespace: String!): MutationResult!
+
+  """Moves a subgraph to a different namespace."""
+  moveSubgraph(name: String!, sourceNamespace: String!, targetNamespace: String!): MutationResult!
+
+  """Creates a data contract on a federated graph."""
+  createContract(
+    name: String!
+    namespace: String!
+    sourceFederatedGraphName: String!
+    excludeTags: [String!]
+    includeTags: [String!]
+    routingUrl: String!
+    admissionWebhookURL: String
+    admissionWebhookSecret: String
+  ): MutationResult!
+
+  """Updates a data contract."""
+  updateContract(
+    name: String!
+    namespace: String!
+    excludeTags: [String!]
+    includeTags: [String!]
+  ): MutationResult!
+
+  """Generates a temporary router token."""
+  generateRouterToken(graphName: String!, namespace: String!): GenerateRouterTokenResult!
+
+  """Creates a permanent federated graph token for the router."""
+  createFederatedGraphToken(name: String!, graphName: String!, namespace: String!): CreateTokenResult!
+
+  """Deletes a router token."""
+  deleteRouterToken(tokenId: String!, graphName: String!, namespace: String!): MutationResult!
+
+  """Publishes persisted operations for a client."""
+  publishPersistedOperations(
+    federatedGraphId: String!
+    clientName: String!
+    clientVersion: String
+    operations: [PersistedOperationInput!]!
+  ): PublishPersistedOperationsResult!
+
+  """Deletes a persisted operation."""
+  deletePersistedOperation(federatedGraphId: String!, clientId: String!, operationId: String!): MutationResult!
+
+  """Invites a user to the organization."""
+  inviteUser(email: String!, organizationSlug: String!): MutationResult!
+
+  """Invites multiple users to the organization."""
+  inviteUsers(emails: [String!]!, organizationSlug: String!): InviteUsersResult!
+
+  """Removes a member from the organization."""
+  removeOrganizationMember(userID: String!): MutationResult!
+
+  """Cancels a pending invitation."""
+  removeInvitation(email: String!): MutationResult!
+
+  """Creates an API key."""
+  createAPIKey(name: String!, expiresAt: ExpiresAt!, groupId: String): CreateAPIKeyResult!
+
+  """Updates an API key."""
+  updateAPIKey(id: String!, name: String): MutationResult!
+
+  """Deletes an API key."""
+  deleteAPIKey(id: String!): MutationResult!
+
+  """Creates an organization webhook configuration."""
+  createOrganizationWebhookConfig(endpoint: String!, key: String, events: [String!]!): MutationResult!
+
+  """Updates an organization webhook configuration."""
+  updateOrganizationWebhookConfig(id: String!, endpoint: String, key: String, events: [String!]): MutationResult!
+
+  """Deletes an organization webhook configuration."""
+  deleteOrganizationWebhookConfig(id: String!): MutationResult!
+
+  """Re-delivers a failed webhook."""
+  redeliverWebhook(deliveryId: String!): MutationResult!
+
+  """Creates an organization integration (e.g. Slack)."""
+  createIntegration(name: String!, type: IntegrationType!, config: IntegrationConfigInput!): MutationResult!
+
+  """Updates an integration configuration."""
+  updateIntegrationConfig(id: String!, config: IntegrationConfigInput!): MutationResult!
+
+  """Deletes an integration."""
+  deleteIntegration(id: String!): MutationResult!
+
+  """Deletes the organization."""
+  deleteOrganization: MutationResult!
+
+  """Restores a soft-deleted organization."""
+  restoreOrganization: MutationResult!
+
+  """Leaves the current organization."""
+  leaveOrganization: MutationResult!
+
+  """Updates organization name/slug."""
+  updateOrganizationDetails(name: String, slug: String): MutationResult!
+
+  """Creates an organization (multi-org support)."""
+  createOrganization(name: String!, slug: String!): CreateOrganizationResult!
+
+  """Creates an organization group (RBAC)."""
+  createOrganizationGroup(name: String!, description: String, rules: [OrganizationGroupRuleInput!]): MutationResult!
+
+  """Updates an organization group."""
+  updateOrganizationGroup(groupId: String!, name: String, description: String, rules: [OrganizationGroupRuleInput!]): MutationResult!
+
+  """Deletes an organization group."""
+  deleteOrganizationGroup(groupId: String!): MutationResult!
+
+  """Updates the group membership of an organization member."""
+  updateOrgMemberGroup(userID: String!, groupId: String!): MutationResult!
+
+  """Creates an OIDC provider for SSO."""
+  createOIDCProvider(
+    name: String!
+    discoveryEndpoint: String!
+    clientId: String!
+    clientSecret: String!
+    mappers: [IDPMapperInput!]
+  ): CreateOIDCProviderResult!
+
+  """Deletes an OIDC provider."""
+  deleteOIDCProvider(id: String!): MutationResult!
+
+  """Updates IDP attribute mappers for an OIDC provider."""
+  updateIDPMappers(providerId: String!, mappers: [IDPMapperInput!]!): MutationResult!
+
+  """Migrates graphs and tokens from Apollo Studio."""
+  migrateFromApollo(apiKey: String!, variantName: String!): MigrateFromApolloResult!
+
+  """Creates a feature flag."""
+  createFeatureFlag(name: String!, namespace: String!, labels: [LabelInput!], featureSubgraphNames: [String!]!): MutationResult!
+
+  """Enables or disables a feature flag."""
+  enableFeatureFlag(name: String!, namespace: String!, enabled: Boolean!): MutationResult!
+
+  """Updates a feature flag."""
+  updateFeatureFlag(name: String!, namespace: String!, labels: [LabelInput!], featureSubgraphNames: [String!]): MutationResult!
+
+  """Deletes a feature flag."""
+  deleteFeatureFlag(name: String!, namespace: String!): MutationResult!
+
+  """Enables linting for a namespace."""
+  enableLintingForTheNamespace(namespace: String!, enabled: Boolean!): MutationResult!
+
+  """Configures lint rules for a namespace."""
+  configureNamespaceLintConfig(namespace: String!, rules: [LintRuleInput!]!): MutationResult!
+
+  """Enables graph pruning for a namespace."""
+  enableGraphPruning(namespace: String!, enabled: Boolean!): MutationResult!
+
+  """Configures graph pruning rules for a namespace."""
+  configureNamespaceGraphPruningConfig(namespace: String!, rules: [GraphPruningRuleInput!]!): MutationResult!
+
+  """Updates namespace checks configuration."""
+  updateNamespaceChecksConfig(namespace: String!, config: NamespaceChecksConfigInput!): MutationResult!
+
+  """Creates a schema proposal."""
+  createProposal(federatedGraphName: String!, namespace: String!, name: String!): CreateProposalResult!
+
+  """Updates a schema proposal (add/update proposed subgraph schemas)."""
+  updateProposal(proposalId: String!, subgraphs: [ProposalSubgraphInput!]!): MutationResult!
+
+  """Enables proposals for a namespace."""
+  enableProposalsForNamespace(namespace: String!, enabled: Boolean!): MutationResult!
+
+  """Configures proposal settings for a namespace."""
+  configureNamespaceProposalConfig(namespace: String!, config: NamespaceProposalConfigInput!): MutationResult!
+
+  """Enables or overrides lint lint rules for a namespace."""
+  createOperationOverrides(checkId: String!, operationHash: String!, changes: [String!]!): MutationResult!
+
+  """Removes an operation change override."""
+  removeOperationOverrides(checkId: String!, operationHash: String!, changes: [String!]!): MutationResult!
+
+  """Creates an ignore-all override for an operation."""
+  createOperationIgnoreAllOverride(checkId: String!, operationHash: String!): MutationResult!
+
+  """Removes the ignore-all override for an operation."""
+  removeOperationIgnoreAllOverride(checkId: String!, operationHash: String!): MutationResult!
+
+  """Marks all breaking changes in a check as safe or unsafe."""
+  toggleChangeOverridesForAllOperations(checkId: String!, graphName: String!, namespace: String!, safe: Boolean!): MutationResult!
+
+  """Creates ignore overrides for all operations in a check."""
+  createIgnoreOverridesForAllOperations(checkId: String!, graphName: String!, namespace: String!): MutationResult!
+
+  """Pushes a cache warmer operation."""
+  pushCacheWarmerOperation(graphName: String!, namespace: String!, operationName: String!, operationContent: String!): MutationResult!
+
+  """Deletes a cache warmer operation."""
+  deleteCacheWarmerOperation(graphName: String!, namespace: String!, operationId: String!): MutationResult!
+
+  """Triggers recomputation of cache warmer operations."""
+  computeCacheWarmerOperations(graphName: String!, namespace: String!): MutationResult!
+
+  """Configures the cache warmer for a federated graph."""
+  configureCacheWarmer(graphName: String!, namespace: String!, enabled: Boolean!): MutationResult!
+
+  """Sets the router compatibility version for a federated graph."""
+  setGraphRouterCompatibilityVersion(graphName: String!, namespace: String!, version: String!): MutationResult!
+
+  """Adds or updates the readme for a graph or subgraph."""
+  addReadme(targetId: String!, readme: String!): MutationResult!
+
+  """Updates feature settings for the organization (enterprise features)."""
+  updateFeatureSettings(feature: Feature!, enabled: Boolean!): MutationResult!
+
+  """Creates a billing checkout session."""
+  createCheckoutSession(planId: String!): CreateCheckoutSessionResult!
+
+  """Creates a billing portal session."""
+  createBillingPortalSession: CreateBillingPortalSessionResult!
+
+  """Upgrades the organization's billing plan."""
+  upgradePlan(planId: String!): MutationResult!
+
+  """Accepts or declines an organization invitation."""
+  acceptOrDeclineInvitation(invitationId: String!, accept: Boolean!): MutationResult!
+
+  """Deletes a registered client."""
+  deleteClient(clientId: String!, graphName: String!, namespace: String!): MutationResult!
+
+  """Links a subgraph to another (for sharing schemas)."""
+  linkSubgraph(subgraphName: String!, namespace: String!, targetSubgraphName: String!, targetNamespace: String!): MutationResult!
+
+  """Unlinks a subgraph."""
+  unlinkSubgraph(subgraphName: String!, namespace: String!): MutationResult!
+
+  """Recomposes a federated graph."""
+  recomposeGraph(graphName: String!, namespace: String!): PublishSubgraphResult!
+
+  """Recomposes a feature flag."""
+  recomposeFeatureFlag(featureFlagName: String!, namespace: String!): PublishSubgraphResult!
+
+  """Initializes the Cosmo user (called on first login)."""
+  initializeCosmoUser: MutationResult!
+
+  """Deletes the authenticated user account."""
+  deleteUser: MutationResult!
+
+  """Updates the namespace login methods."""
+  updateNamespaceLoginMethods(namespace: String!, methods: [String!]!): MutationResult!
+
+  """Updates the organization-wide login methods."""
+  updateOrganizationLoginMethods(methods: [String!]!): MutationResult!
+
+  """Configures subgraph check extensions."""
+  configureSubgraphCheckExtensions(namespace: String!, config: SubgraphCheckExtensionsConfigInput!): MutationResult!
+
+  """Creates onboarding record."""
+  createOnboarding: MutationResult!
+
+  """Marks onboarding as complete."""
+  finishOnboarding: MutationResult!
+
+  """Creates playground scripts."""
+  createPlaygroundScript(name: String!, content: String!, type: String!): MutationResult!
+
+  """Deletes playground scripts."""
+  deletePlaygroundScript(id: String!): MutationResult!
+
+  """Updates playground scripts."""
+  updatePlaygroundScript(id: String!, name: String, content: String): MutationResult!
+
+  """Verifies an API key has access to a specific graph."""
+  verifyAPIKeyGraphAccess(apiKey: String!, graphName: String!, namespace: String!): Boolean!
+}
+
+# ---------------------------------------------------------------------------
+# Input types
+# ---------------------------------------------------------------------------
+
+input LabelInput {
+  key: String!
+  value: String!
+}
+
+input PaginationInput {
+  limit: Int
+  offset: Int
+}
+
+input DateRangeInput {
+  start: String!
+  end: String!
+}
+
+input AnalyticsFilterInput {
+  field: String!
+  value: String
+  operator: String!
+}
+
+input AnalyticsConfigInput {
+  groupBy: String
+}
+
+input PublishSubgraphInput {
+  name: String!
+  schema: String!
+}
+
+input PersistedOperationInput {
+  id: String!
+  contents: String!
+  operationNames: [String!]
+}
+
+input IntegrationConfigInput {
+  slackWebhookURL: String
+}
+
+input OrganizationGroupRuleInput {
+  resource: String!
+  action: String!
+  resourceType: String!
+}
+
+input IDPMapperInput {
+  attribute: String!
+  role: String!
+}
+
+input LintRuleInput {
+  ruleName: String!
+  severity: LintSeverity!
+}
+
+input GraphPruningRuleInput {
+  ruleName: String!
+  severity: LintSeverity!
+  gracePeriodDays: Int
+}
+
+input NamespaceChecksConfigInput {
+  skipTrafficCheck: Boolean
+  trafficCheckDays: Int
+  breakingChangesRetentionDays: Int
+}
+
+input ProposalSubgraphInput {
+  name: String!
+  schema: String!
+  isDeleted: Boolean
+  isNew: Boolean
+}
+
+input NamespaceProposalConfigInput {
+  checkSeverityLevel: String
+  publishSeverityLevel: String
+  enableProposalChecks: Boolean
+  namingConvention: ProposalNamingConvention
+}
+
+input SubgraphCheckExtensionsConfigInput {
+  webhookURL: String
+  webhookSecret: String
+}
+
+# ---------------------------------------------------------------------------
+# Result & helper types for mutations/queries
+# ---------------------------------------------------------------------------
+
+type MutationResult {
+  response: Response!
+}
+
+type CreateFederatedGraphResult {
+  response: Response!
+  compositionErrors: [CompositionError!]!
+  deploymentErrors: [DeploymentError!]!
+}
+
+type PublishSubgraphResult {
+  response: Response!
+  compositionErrors: [CompositionError!]!
+  deploymentErrors: [DeploymentError!]!
+  hasChanged: Boolean
+  compositionWarnings: [CompositionWarning!]!
+  proposalMatchMessage: String
+  counts: SubgraphPublishStats
+}
+
+type CheckSubgraphSchemaResult {
+  response: Response!
+  breakingChanges: [SchemaChange!]!
+  nonBreakingChanges: [SchemaChange!]!
+  compositionErrors: [CompositionError!]!
+  lintIssues: [LintIssue!]!
+  graphPruningIssues: [GraphPruningIssue!]!
+  checkedFederatedGraphs: [CheckedFederatedGraphs!]!
+  hasClientTraffic: Boolean!
+  isSafe: Boolean!
+  proposalMatchMessage: String
+  counts: SchemaCheckCounts
+  operationUsageStats: CheckOperationUsageStats
+}
+
+type CheckFederatedGraphResult {
+  response: Response!
+  compositionErrors: [CompositionError!]!
+  nonBreakingChanges: [SchemaChange!]!
+  breakingChanges: [SchemaChange!]!
+  compositionWarnings: [CompositionWarning!]!
+}
+
+type FixSubgraphSchemaResult {
+  response: Response!
+  sdl: String
+}
+
+type GenerateRouterTokenResult {
+  response: Response!
+  token: String!
+}
+
+type CreateTokenResult {
+  response: Response!
+  token: String!
+}
+
+type CreateAPIKeyResult {
+  response: Response!
+  apiKey: String!
+}
+
+type CreateOrganizationResult {
+  response: Response!
+  organizationId: String!
+  organizationSlug: String!
+}
+
+type CreateOIDCProviderResult {
+  response: Response!
+  providerId: String!
+  signInRedirectURL: String!
+}
+
+type MigrateFromApolloResult {
+  response: Response!
+  token: String!
+}
+
+type InviteUsersResult {
+  response: Response!
+  errors: [InviteUsersError!]!
+}
+
+type InviteUsersError {
+  email: String!
+  errorMessage: String!
+}
+
+type GetCheckSummaryResult {
+  response: Response!
+  check: SchemaCheck
+  changes: [SchemaChange!]!
+  changeCounts: ChangeCounts
+  affectedOperations: [CheckOperationEntry!]!
+  proposedSubgraphSchemas: [String!]!
+  lintIssues: [LintIssue!]!
+  graphPruningIssues: [GraphPruningIssue!]!
+}
+
+type CheckOperationEntry {
+  id: String!
+  name: String!
+  hash: String!
+  type: String!
+  impact: String!
+  firstSeenAt: String!
+  lastSeenAt: String!
+  impactedClients: [String!]!
+}
+
+type CheckOperation {
+  id: String!
+  name: String!
+  hash: String!
+  type: String!
+  impact: String!
+  firstSeenAt: String!
+  lastSeenAt: String!
+}
+
+type OperationOverride {
+  operationHash: String!
+  operationName: String!
+  changesOverridden: [String!]!
+  hasIgnoreAllOverride: Boolean!
+}
+
+type GetFederatedGraphChangelogResult {
+  response: Response!
+  federatedGraphChangelogOutput: [FederatedGraphChangelogOutput!]!
+  hasNextPage: Boolean!
+}
+
+type DashboardAnalyticsResult {
+  requestSeries: [RequestSeriesDataPoint!]!
+  mostRequestedOperations: [OperationRequestCount!]!
+  requestCountChangePercent: Float!
+  errorCountChangePercent: Float!
+}
+
+type GraphMetricsResult {
+  requestSeries: [RequestSeriesDataPoint!]!
+  latencyAvg: Float!
+  latencyP95: Float!
+  requestsPerMinute: Float!
+  errorRate: Float!
+}
+
+type MetricsErrorRateResult {
+  series: [ErrorRateSeries!]!
+}
+
+type ErrorRateSeries {
+  timestamp: String!
+  errorRate: Float!
+  requestRate: Float!
+}
+
+type FieldUsageResult {
+  clients: [FieldUsageClient!]!
+  totalRequests: Int!
+  requestsWithoutClientName: Int!
+}
+
+type FieldUsageClient {
+  name: String!
+  version: String!
+  count: Int!
+}
+
+type OperationEntry {
+  hash: String!
+  name: String!
+  type: String!
+  lastSeenAt: String!
+  firstSeenAt: String!
+  requestCount: Int!
+  errorCount: Int!
+  errorRate: Float!
+  latencyP95: Float!
+}
+
+type AnalyticsClient {
+  name: String!
+  version: String!
+  requestCount: Int!
+}
+
+type DeprecatedField {
+  fieldPath: String!
+  usageCount: Int!
+}
+
+type PublishPersistedOperationsResult {
+  response: Response!
+  operations: [PublishedOperation!]!
+}
+
+type Composition {
+  id: String!
+  schemaVersionId: String!
+  createdAt: String!
+  isComposable: Boolean!
+  compositionErrors: [CompositionError!]!
+  deploymentErrors: [DeploymentError!]!
+  createdBy: String!
+}
+
+type CompositionDetails {
+  id: String!
+  schemaVersionId: String!
+  createdAt: String!
+  isComposable: Boolean!
+  compositionErrors: [CompositionError!]!
+  subgraphSchemas: [SubgraphSchema!]!
+  routerConfig: String
+}
+
+type SubgraphSchema {
+  name: String!
+  sdl: String!
+}
+
+type OIDCProvider {
+  id: String!
+  name: String!
+  discoveryEndpoint: String!
+  clientId: String!
+  alias: String!
+}
+
+type Client {
+  id: String!
+  name: String!
+  createdAt: String!
+  lastUpdatedAt: String!
+  persistedOperationsCount: Int!
+}
+
+type PreviewDeleteClientResult {
+  response: Response!
+  affectedOperations: [PersistedOperation!]!
+}
+
+type RouterCompatibilityVersion {
+  version: String!
+  isLatest: Boolean!
+  deprecatedAt: String
+}
+
+type LintRule {
+  ruleName: String!
+  severity: LintSeverity!
+}
+
+type NamespaceChecksConfig {
+  skipTrafficCheck: Boolean!
+  trafficCheckDays: Int!
+  breakingChangesRetentionDays: Int!
+}
+
+type NamespaceGraphPruningConfig {
+  enabled: Boolean!
+  rules: [GraphPruningRule!]!
+}
+
+type GraphPruningRule {
+  ruleName: String!
+  severity: LintSeverity!
+  gracePeriodDays: Int!
+}
+
+type NamespaceProposalConfig {
+  enabled: Boolean!
+  checkSeverityLevel: String!
+  publishSeverityLevel: String!
+  enableProposalChecks: Boolean!
+  namingConvention: ProposalNamingConvention!
+}
+
+type UserAccessibleResources {
+  federatedGraphs: [FederatedGraph!]!
+  subgraphs: [Subgraph!]!
+}
+
+type Router {
+  id: String!
+  serviceName: String!
+  serviceVersion: String!
+  processId: String!
+  hostname: String!
+  clusterName: String!
+  federatedGraphId: String!
+  createdAt: String!
+  lastHeartbeatAt: String!
+}
+
+type OrgInvitation {
+  id: String!
+  organizationName: String!
+  organizationSlug: String!
+  invitedBy: String!
+  createdAt: String!
+}
+
+type WebhookMeta {
+  events: [String!]!
+}
+
+type WebhookDelivery {
+  id: String!
+  webhookId: String!
+  eventType: String!
+  payload: String!
+  responseStatus: Int!
+  responseBody: String!
+  createdAt: String!
+  redelivered: Boolean!
+}
+
+type CacheWarmerConfig {
+  enabled: Boolean!
+}
+
+type CreateCheckoutSessionResult {
+  response: Response!
+  sessionId: String!
+  url: String!
+}
+
+type CreateBillingPortalSessionResult {
+  response: Response!
+  url: String!
+}
+
+type SubgraphCheckExtensionsConfig {
+  webhookURL: String!
+  webhookSecret: String
+}
+
+type Workspace {
+  id: String!
+  name: String!
+  slug: String!
+}
+
+type CreateProposalResult {
+  response: Response!
+  proposalId: String!
+}
+
+type PlaygroundScript {
+  id: String!
+  name: String!
+  content: String!
+  type: String!
+  createdAt: String!
+}
