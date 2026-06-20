@@ -7,7 +7,7 @@ description: |
   schema registry, composition checks, analytics, distributed tracing, and routing
   through a high-performance open-source federation runtime.
 type: Index
-image: https://kinlane-productions2.s3.amazonaws.com/apis-json/apis-json-logo.jpg
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
 url: https://wundergraph.com/
 baseURL: https://cosmo-cp.wundergraph.com
 created: 2026-06-14
@@ -33,7 +33,7 @@ apis:
       - GraphQL
       - Federation
       - API Management
-    image: https://kinlane-productions2.s3.amazonaws.com/apis-json/apis-json-logo.jpg
+    image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
     humanURL: https://cosmo-docs.wundergraph.com/
     baseURL: https://cosmo-cp.wundergraph.com
     properties:
