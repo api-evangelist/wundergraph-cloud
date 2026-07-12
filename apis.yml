@@ -42,6 +42,8 @@ apis:
       - url: graphql/wundergraph-cloud-graphql.md
         type: GraphQL
 common:
+  - type: DomainSecurity
+    url: security/wundergraph-cloud-domain-security.yml
   - url: https://wundergraph.com/
     type: Website
   - url: https://cosmo-docs.wundergraph.com/
@@ -58,6 +60,8 @@ common:
     type: RateLimits
   - url: finops/wundergraph-cloud-finops.md
     type: FinOps
+  - url: https://wundergraph.com/rss.xml
+    type: Blog
 maintainers:
   - FN: Kin Lane
     email: kin@apievangelist.com
